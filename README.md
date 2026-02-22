@@ -2,6 +2,8 @@
 
 Nix package for [Heaper](https://heaper.de) — wraps the official AppImage.
 
+> **⚠️ Note:** This repo is not actively maintained. It was created for personal use and is provided as-is. Feel free to fork, modify, and use however you like (MIT licensed).
+
 ## Usage
 
 ### As a flake input
@@ -34,3 +36,7 @@ nix run github:node-openclaw/heaper-nix
 ## Version
 
 Currently tracking Heaper v16.16.23 (x86_64 AppImage).
+
+## License
+
+MIT — do whatever you want with it.
