@@ -14,33 +14,33 @@ let
   };
 
   appimageContents = appimageTools.extractType2 {inherit pname version src;};
+  wrapped = appimageTools.wrapType2 {inherit pname version src;};
 in
-  appimageTools.wrapType2 {
-    inherit pname version src;
+  wrapped.overrideAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or []) ++ [makeWrapper];
 
-    extraPkgs = _pkgs: [makeWrapper];
+    installPhase =
+      (old.installPhase or "")
+      + ''
+        # Wrap with Electron Wayland/HiDPI flags
+        wrapProgram $out/bin/${pname} \
+          --add-flags "--ozone-platform-hint=auto" \
+          --add-flags "--enable-features=WaylandWindowDecorations"
 
-    extraInstallCommands = ''
-      # Wrap with Electron Wayland/HiDPI flags
-      mv $out/bin/${pname} $out/bin/.${pname}-unwrapped
-      makeWrapper $out/bin/.${pname}-unwrapped $out/bin/${pname} \
-        --add-flags "--ozone-platform-hint=auto" \
-        --add-flags "--enable-features=WaylandWindowDecorations"
+        # Desktop entry
+        install -m 444 -D ${appimageContents}/heaper.desktop $out/share/applications/heaper.desktop
+        substituteInPlace $out/share/applications/heaper.desktop \
+          --replace-fail 'Exec=AppRun' 'Exec=${pname}'
 
-      # Desktop entry
-      install -m 444 -D ${appimageContents}/heaper.desktop $out/share/applications/heaper.desktop
-      substituteInPlace $out/share/applications/heaper.desktop \
-        --replace-fail 'Exec=AppRun' 'Exec=${pname}'
-
-      # Icons
-      for size in 16 32 48 64 128 256 512 1024; do
-        icon="${appimageContents}/usr/share/icons/hicolor/''${size}x''${size}/apps/heaper.png"
-        if [ -f "$icon" ]; then
-          install -m 444 -D "$icon" \
-            "$out/share/icons/hicolor/''${size}x''${size}/apps/heaper.png"
-        fi
-      done
-    '';
+        # Icons
+        for size in 16 32 48 64 128 256 512 1024; do
+          icon="${appimageContents}/usr/share/icons/hicolor/''${size}x''${size}/apps/heaper.png"
+          if [ -f "$icon" ]; then
+            install -m 444 -D "$icon" \
+              "$out/share/icons/hicolor/''${size}x''${size}/apps/heaper.png"
+          fi
+        done
+      '';
 
     meta = {
       description = "Heaper - productivity app";
@@ -49,4 +49,4 @@ in
       platforms = ["x86_64-linux"];
       mainProgram = "heaper";
     };
-  }
+  })
