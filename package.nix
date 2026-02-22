@@ -2,6 +2,7 @@
   lib,
   appimageTools,
   fetchurl,
+  makeWrapper,
 }:
 let
   pname = "heaper";
@@ -17,7 +18,15 @@ in
   appimageTools.wrapType2 {
     inherit pname version src;
 
+    extraPkgs = _pkgs: [makeWrapper];
+
     extraInstallCommands = ''
+      # Wrap with Electron Wayland/HiDPI flags
+      mv $out/bin/${pname} $out/bin/.${pname}-unwrapped
+      makeWrapper $out/bin/.${pname}-unwrapped $out/bin/${pname} \
+        --add-flags "--ozone-platform-hint=auto" \
+        --add-flags "--enable-features=WaylandWindowDecorations"
+
       # Desktop entry
       install -m 444 -D ${appimageContents}/heaper.desktop $out/share/applications/heaper.desktop
       substituteInPlace $out/share/applications/heaper.desktop \
